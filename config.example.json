@@ -1,0 +1,28 @@
+{
+  "_comment": "이 파일을 config.json 으로 복사해 채우세요. config.json 은 .gitignore 에 있어 커밋되지 않습니다. hints 는 브랜치명/PR 제목/파일 경로에서 카테고리를 판별할 키워드입니다.",
+  "output_dir": "~/Desktop/weekly-report",
+  "repos": [
+    {
+      "path": "~/work/my-service-api",
+      "name": "my-service",
+      "default_category": "서비스 A 출시"
+    }
+  ],
+  "categories": [
+    {
+      "emoji": "🚀",
+      "name": "서비스 A 출시",
+      "hints": ["release", "launch", "출시", "store"]
+    },
+    {
+      "emoji": "🧪",
+      "name": "서비스 B 개선",
+      "hints": ["b-service", "improve"]
+    },
+    {
+      "emoji": "➕",
+      "name": "그 외 업무",
+      "hints": []
+    }
+  ]
+}

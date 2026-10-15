@@ -12,17 +12,51 @@
     {
       "emoji": "🚀",
       "name": "서비스 A 출시",
-      "hints": ["release", "launch", "출시", "store"]
+      "hints": [
+        "release",
+        "launch",
+        "출시",
+        "store"
+      ]
     },
     {
       "emoji": "🧪",
       "name": "서비스 B 개선",
-      "hints": ["b-service", "improve"]
+      "hints": [
+        "b-service",
+        "improve"
+      ]
     },
     {
       "emoji": "➕",
       "name": "그 외 업무",
       "hints": []
     }
-  ]
+  ],
+  "notion": {
+    "_comment": "선택. Notion 커넥터가 연결돼 있을 때 Action DB에서 내 담당 항목을 읽기 전용으로 수집한다. action_db 는 notion-fetch 로 DB를 열었을 때 나오는 collection:// URL, user_id 는 notion-get-self 의 user.id.",
+    "action_db": "collection://00000000-0000-0000-0000-000000000000",
+    "action_db_url": "https://www.notion.so/...",
+    "user_id": "00000000-0000-0000-0000-000000000000",
+    "props": {
+      "title": "업무 내용",
+      "owner": "담당자",
+      "status": "상태",
+      "period": "기간",
+      "scope": "Scope",
+      "project": "Project"
+    },
+    "status_map": {
+      "완료": "🟢",
+      "진행중": "🟠",
+      "오늘 할 일": "🟠",
+      "폐기": "❌",
+      "백로그": "차주"
+    },
+    "exclude_title_patterns": [
+      "건강검진",
+      "휴가",
+      "반차"
+    ]
+  }
 }

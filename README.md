@@ -1,11 +1,12 @@
 # weekly-report — Claude Code 주간업무보고 스킬
 
-Git/GitHub 활동(내 PR, 푸시 안 된 로컬 커밋, 작업중 변경)을 모아
+Git/GitHub 활동(내 PR, 푸시 안 된 로컬 커밋, 작업중 변경)과, 연결돼 있으면 Notion Action DB의 내 담당 항목까지 모아
 **팀장·파트장이 30초 안에 훑을 수 있는** 한국어 주간보고 초안을 만들어 주는 [Claude Code](https://claude.com/claude-code) 스킬입니다.
 
 - 커밋 로그를 옮겨 적지 않고, "무엇을 했고 어디까지 왔는가"를 사람이 읽는 문장으로 다시 씁니다.
 - 읽는 사람이 **비개발자**라는 전제로 씁니다. 코드 용어를 쓰지 않고, 필요할 때만 "왜 했는지"를 사용자·운영 관점으로 붙입니다.
 - 결과는 Teams / Slack / Notion에 그대로 붙여넣을 수 있는 마크다운입니다.
+- Notion은 **읽기만** 합니다. 커밋에 안 남는 미팅·문서·일정을 Action DB에서 가져오되, Notion에 아무것도 쓰지 않습니다.
 
 ## 출력 예시
 
@@ -82,6 +83,45 @@ git clone https://github.com/shindong96/weekly-report.git .claude/skills/weekly-
 | `repos[].default_category` | 힌트로 분류가 안 될 때 쓸 카테고리. |
 | `categories[]` | 보고서 카테고리. 배열 순서가 출력 순서입니다. 마지막은 "그 외 업무" 같은 잡동사니 칸으로 두세요. |
 | `categories[].hints` | 브랜치명·PR 제목·파일 경로에서 이 카테고리를 판별할 키워드. |
+| `notion` | 선택. 아래 "Notion 연동" 참고. 없으면 Git만 수집합니다. |
+
+## Notion 연동 (선택, 읽기 전용)
+
+Notion에 태스크 DB(예: Action DB)가 있고 담당자·상태·기간 속성이 있으면, 내 담당 항목을 보고서 재료로 같이 모읍니다.
+커밋에 안 남는 미팅, 문서 작업, 일정이 자동으로 들어옵니다.
+
+**1. Notion 커넥터 연결.** Claude Code에서 `/mcp`로 claude.ai Notion 커넥터에 로그인합니다.
+승인 화면에서 **태스크 DB가 있는 페이지만** 선택하면 그 범위 밖은 보이지 않습니다. 팀 워크스페이스여도 본인 계정으로만 연결되고 다른 사람 권한에는 영향이 없습니다.
+
+**2. 설정.** `config.json`에 `notion` 블록을 추가합니다. `action_db`는 Claude에게 "Action DB 열어줘"라고 하면 나오는 `collection://…` 주소, `user_id`는 `notion-get-self` 결과의 `user.id`입니다.
+
+```json
+"notion": {
+  "action_db": "collection://00000000-0000-0000-0000-000000000000",
+  "user_id": "00000000-0000-0000-0000-000000000000",
+  "props": { "title": "업무 내용", "owner": "담당자", "status": "상태", "period": "기간", "scope": "Scope", "project": "Project" },
+  "status_map": { "완료": "🟢", "진행중": "🟠", "오늘 할 일": "🟠", "폐기": "❌", "백로그": "차주" },
+  "exclude_title_patterns": ["건강검진", "휴가", "반차"]
+}
+```
+
+**3. 쓰기 막기 (권장).** 커넥터 자체는 읽기·쓰기 권한을 함께 받으므로, Claude Code 권한 규칙으로 쓰기를 묶습니다.
+`~/.claude/settings.json`에 아래처럼 넣으면 삭제·이동·DB 변경은 차단되고, 생성·수정·댓글은 호출할 때마다 승인 창이 뜹니다.
+`<server>`는 `/mcp`에 보이는 Notion 서버 이름입니다 (claude.ai 커넥터는 `mcp__<uuid>__`, 플러그인은 `mcp__plugin_engineering_notion__` 꼴).
+
+```json
+"permissions": {
+  "ask":  ["mcp__<server>__notion-create-pages", "mcp__<server>__notion-update-page",
+           "mcp__<server>__notion-create-comment"],
+  "deny": ["mcp__<server>__notion-delete-pages", "mcp__<server>__notion-move-pages",
+           "mcp__<server>__notion-delete-databases", "mcp__<server>__notion-update-data-source"]
+}
+```
+
+스킬은 어차피 조회 도구(`notion-query-data-sources`, `notion-fetch`)만 부르지만, 이 규칙이 있으면 실수로도 쓰지 못합니다.
+
+동작은 [SKILL.md](SKILL.md)의 "1-b. Notion Action DB 수집"에 있습니다. 요약하면 담당자 = 나이고 이번 주에 걸친 항목을 가져와,
+`[개발]` 항목은 같은 맥락의 PR과 합치고, `[일정]`·`[회의]`는 제목으로 끝내며, 개인 일정은 뺍니다.
 
 ## 사용
 
@@ -94,8 +134,9 @@ Claude Code에서 이렇게 말하면 됩니다.
 흐름:
 
 1. `scripts/collect.sh`가 최근 7일치 PR·로컬 커밋·작업중 변경을 모읍니다. 설정이 없으면 현재 레포, 있으면 설정의 레포들. (`bash scripts/collect.sh 10`처럼 기간 조정 가능)
+   Notion이 연결돼 있으면 Action DB에서 내 담당 항목도 같이 가져옵니다.
 2. Claude가 카테고리별로 분류하고, 같은 맥락의 PR·커밋을 하나의 작업으로 묶어 문장을 씁니다.
-3. 초안을 보여준 뒤 "커밋에 안 남는 일(미팅, 문서, 의사결정)이 있으면 알려 달라"고 묻습니다.
+3. 초안을 보여준 뒤 "코드와 Notion에 안 남는 일(미팅, 의사결정)이 있으면 알려 달라"고 묻습니다.
 4. `output_dir/weekly-report-YYYY-MM-DD.md`로 저장합니다.
 
 ## 문체 규칙 요약

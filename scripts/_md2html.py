@@ -2,7 +2,7 @@
 """보고서 마크다운(불릿·볼드·인라인코드·링크만 쓰는 부분집합)을 HTML로 바꾼다.
 usage: _md2html.py report.md  → stdout 에 HTML
 외부 모듈 없이 동작한다. pandoc 이 없는 환경을 위한 최소 변환기다.
-하위 불릿은 <li> 안에 <ul> 로 중첩해, Teams 같은 보수적인 편집기에서도 들여쓰기가 유지된다."""
+하위 불릿은 <li> 안에 <ul> 로 중첩해, Teams 같은 보수적인 편집기에서도 들여쓰기가 유지된다.\n일반 줄은 <p> 가 아니라 <div> 로 내보낸다. Teams 는 <p> 사이 줄바꿈을 공백으로 합쳐 헤더와 카테고리가 한 줄이 된다."""
 import html
 import re
 import sys
@@ -61,8 +61,11 @@ for line in src:
             stack[level].append(item)
     elif line.strip() == "":
         flush()
+        # Teams 입력창은 <p> 사이 줄바꿈을 공백으로 합친다. 편집기가 빈 줄을 표현하는 방식 그대로 <div><br></div> 를 쓴다.
+        if out and out[-1] != "<div><br></div>":
+            out.append("<div><br></div>")
     else:
         flush()
-        out.append(f"<p>{inline(line.strip())}</p>")
+        out.append(f"<div>{inline(line.strip())}</div>")
 flush()
-print("\n".join(out))
+print("".join(out))

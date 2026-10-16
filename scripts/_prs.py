@@ -25,13 +25,15 @@ if not recent:
     sys.exit(0)
 
 
-def week_commits(branch):
-    """기간 내 머지 아닌 커밋 날짜 목록. 리모트 브랜치 우선, 없으면 로컬."""
+def week_commits(branch, base):
+    """기간 내 머지 아닌 커밋 날짜 목록. base 브랜치에 없는 커밋만 센다(dev 를 머지해 들어온 남의 커밋 제외).
+    리모트 브랜치 우선, 없으면 로컬."""
     if not repo or not branch:
         return None
-    for ref in (f"origin/{branch}", branch):
+    for head in (f"origin/{branch}", branch):
+        rng = f"origin/{base}..{head}" if base else head
         r = subprocess.run(
-            ["git", "-C", repo, "log", ref, "--no-merges", f"--since={since}",
+            ["git", "-C", repo, "log", rng, "--no-merges", f"--since={since}",
              "--format=%ad", "--date=short"],
             capture_output=True, text=True)
         if r.returncode == 0:
@@ -51,7 +53,7 @@ for p in sorted(recent, key=lambda x: x.get("updatedAt", ""), reverse=True):
     print(f"  branch: {p.get('headRefName', '?')}")
     print(f"  url: {p.get('url', '')}")
     print(f"  created: {(p.get('createdAt') or '')[:10]}  updated: {(p.get('updatedAt') or '')[:10]}")
-    dates = week_commits(p.get("headRefName"))
+    dates = week_commits(p.get("headRefName"), p.get("baseRefName"))
     if dates is not None:
         if dates:
             print(f"  이번 주 커밋(머지 제외): {len(dates)}건, 마지막 {max(dates)}")

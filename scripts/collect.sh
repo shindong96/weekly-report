@@ -46,7 +46,7 @@ while IFS=$'\t' read -r REPO_PATH NAME DEFAULT_CAT; do
   echo "### PRs (내가 작성, ${SINCE} 이후 업데이트)"
   if [ "$HAS_GH" -eq 1 ]; then
     (cd "$REPO_PATH" && gh pr list --author "@me" --state all --limit 100 \
-        --json number,title,state,isDraft,url,headRefName,createdAt,updatedAt,mergedAt,body 2>/dev/null) \
+        --json number,title,state,isDraft,url,headRefName,baseRefName,createdAt,updatedAt,mergedAt,body 2>/dev/null) \
       | python3 "$SCRIPT_DIR/_prs.py" "$SINCE" "$REPO_PATH"
   else
     echo "  (gh 미사용)"

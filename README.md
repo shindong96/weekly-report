@@ -138,6 +138,8 @@ Claude Code에서 이렇게 말하면 됩니다.
 2. Claude가 카테고리별로 분류하고, 같은 맥락의 PR·커밋을 하나의 작업으로 묶어 문장을 씁니다.
 3. 초안을 보여준 뒤 "코드와 Notion에 안 남는 일(미팅, 의사결정)이 있으면 알려 달라"고 묻습니다.
 4. `output_dir/weekly-report-YYYY-MM-DD.md`로 저장합니다.
+5. `scripts/copy-teams.sh`로 서식 있는 HTML을 클립보드에 올립니다. Teams 입력창은 마크다운 원문을 변환해 주지 않아서,
+   이걸 붙여넣어야 불릿·볼드·링크가 살아납니다. (macOS 기본 도구만 사용, Linux는 `xclip` 필요)
 
 ## 문체 규칙 요약
 
@@ -164,6 +166,8 @@ weekly-report/
 ├── references/template.md   # 출력 템플릿과 문체 규칙
 └── scripts/
     ├── collect.sh           # PR·커밋·작업중 변경 수집
+    ├── copy-teams.sh        # 보고서를 서식 있는 HTML로 클립보드에 복사 (Teams 붙여넣기용)
     ├── _cfg.py              # config.json 파서
+    ├── _md2html.py          # 보고서 마크다운 → HTML 최소 변환기
     └── _prs.py              # gh pr list 출력 정리
 ```
